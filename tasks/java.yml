@@ -1,0 +1,20 @@
+---
+- name: remove /var/lib/apt/lists/lock 
+  ansible.builtin.file:
+    path: /var/lib/apt/lists/lock
+    state: absent
+
+- name: remove /var/cache/apt/archives/lock 
+  ansible.builtin.file:
+    path: /var/cache/apt/archives/lock
+    state: absent
+
+- name: remove /var/lib/dpkg/lock 
+  ansible.builtin.file:
+    path: /var/lib/dpkg/lock
+    state: absent
+
+- name: Install OpenJDK 11
+  apt:
+    name: openjdk-11-jdk
+    state: latest

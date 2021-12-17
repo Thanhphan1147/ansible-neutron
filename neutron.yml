@@ -1,0 +1,13 @@
+---
+- name: Install and configure neutron
+  hosts: servers
+  become: yes
+
+  tasks:
+    - name: Install java
+      include: tasks/java.yml
+
+    - name: Install node
+      include: tasks/node.yml
+      vars: 
+        item: 12.16.1
