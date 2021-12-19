@@ -1,0 +1,22 @@
+---
+- name: Setting up permission
+  ansible.builtin.file:
+    path: . {{ ansible_env.HOME }}/neutron_game/mvnw
+    owner: root
+    group: root
+    mode: 0770
+
+- name: Build jar
+  shell: >
+    . {{ ansible_env.HOME }}/neutron_game/mvnw install -B -e
+  args:
+    executable: /bin/bash
+    chdir: "{{ ansible_env.HOME }}"
+
+- name: Verify
+  shell: >
+    . {{ ansible_env.HOME }}/neutron_game/mvnw -ntp verify -Pprod -DskipTests
+  args:
+    executable: /bin/bash
+    chdir: "{{ ansible_env.HOME }}"
+  

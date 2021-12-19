@@ -2,17 +2,43 @@
 - name: Install nvm
   shell: >
     curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
-  args:
+  args: 
     executable: /bin/bash
     chdir: "{{ ansible_env.HOME }}"
     creates: "{{ ansible_env.HOME }}/.nvm/nvm.sh"
 
-- name: Install node 12.16.1
-  shell: >
-    . {{ ansible_env.HOME }}/.nvm/nvm.sh && nvm install {{ item }}
+- name: Check node {{ node_version }} installation
+  shell: "'.' {{ ansible_env.HOME +'/.nvm/nvm.sh && nvm ls ' + node_version }}"
   args:
     executable: /bin/bash
     chdir: "{{ ansible_env.HOME }}"
-    creates: "{{ ansible_env.HOME }}/.nvm/versions/{{ item }}"
-  loop:
-    - node
+  register: nvm_check_node_version
+  failed_when: >
+    (nvm_check_node_version.rc != 0) and
+    (nvm_check_node_version != 3)
+
+- name: Install node "{{ node_version }}"
+  shell: >
+    . {{ ansible_env.HOME }}/.nvm/nvm.sh && nvm install {{ node_version }}
+  args:
+    executable: /bin/bash
+    chdir: "{{ ansible_env.HOME }}"
+    creates: "{{ ansible_env.HOME }}/.nvm/versions/{{ node_version }}"
+  register: node_version_response
+  changed_when: "'already installed' not in node_version_response.stderr"
+  when: >
+    (nvm_check_node_version.rc == 3)
+
+- name: Switch to {{ node_version }}
+  shell: >
+    . {{ ansible_env.HOME }}/.nvm/nvm.sh && nvm alias default {{ node_version }} && node --version
+  args:
+    executable: /bin/bash
+    chdir: "{{ ansible_env.HOME }}"
+  register: node_version_switch_response
+  changed_when: >
+    (node_version_switch_response.rc != 0) 
+
+- name: Print current node version
+  debug:
+    msg: "{{ node_version_switch_response.stdout }}" 

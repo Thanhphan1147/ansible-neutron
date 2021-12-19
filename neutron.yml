@@ -1,6 +1,9 @@
 ---
 - name: Install and configure neutron
   hosts: servers
+  vars: 
+    node_version: 12.16.1
+    node_path: "/root/.nvm/versions/node/{{node_version}}/bin"
   become: yes
 
   tasks:
@@ -9,5 +12,32 @@
 
     - name: Install node
       include: tasks/node.yml
-      vars: 
-        item: 12.16.1
+
+    - name: Fetch backend git repository
+      ansible.builtin.git:
+        repo: 'https://tphan-personal@dev.azure.com/tphan-personal/neutron-game/_git/neutron-game'
+        dest: "{{ ansible_env.HOME }}/neutron-game"
+      environment:
+        GIT_TERMINAL_PROMPT: 0
+        
+    - name: Install node dependencies
+      shell: |
+        . {{ ansible_env.HOME }}/.nvm/nvm.sh
+        nvm use --silent {{ node_version }}
+        nvm --version
+        node --version
+        whoami
+        which node
+        ls -lah "{{node_path}}" 
+        pwd
+      args:
+        chdir: "{{ ansible_env.HOME }}/neutron-game"
+        executable: /bin/bash
+      register: node_ci_output
+    
+    - name: Debug node output
+      debug:
+        msg: "{{ node_ci_output.stdout }}"
+   
+    - name: Maven
+      include: tasks/backend.yml
