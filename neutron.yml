@@ -3,8 +3,13 @@
   hosts: servers
   vars: 
     node_version: 12.16.1
-    node_path: "/root/.nvm/versions/node/{{node_version}}/bin"
+    node_path: "/root/.nvm/versions/node/v{{node_version}}/bin"
   become: yes
+  
+  vars_files:
+    - defaults/main.yml
+  roles:
+    - { role: geerlingguy.mysql }
 
   tasks:
     - name: Install java
@@ -21,6 +26,7 @@
         GIT_TERMINAL_PROMPT: 0
         
     - name: Install node dependencies
+      become: true
       shell: |
         . {{ ansible_env.HOME }}/.nvm/nvm.sh
         nvm use --silent {{ node_version }}
@@ -28,8 +34,10 @@
         node --version
         whoami
         which node
-        ls -lah "{{node_path}}" 
-        pwd
+        ls -lah "{{node_path}}/node" 
+        npm config set user 0
+        npm config set insafe-perm true
+        bash -c 'npm ci &>/root/npmlog'
       args:
         chdir: "{{ ansible_env.HOME }}/neutron-game"
         executable: /bin/bash
@@ -41,3 +49,6 @@
    
     - name: Maven
       include: tasks/backend.yml
+    
+    - name: install nginx
+      include: tasks/nginx.yml

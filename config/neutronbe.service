@@ -1,0 +1,14 @@
+[Unit]
+Description=Neutron Backend
+
+[Service]
+Type=simple
+PIDFile=/run/neutronbe.pid
+ExecStart=/root/neutron-game/start.sh
+User=root
+Group=root
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

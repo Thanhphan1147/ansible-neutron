@@ -15,7 +15,7 @@
   register: nvm_check_node_version
   failed_when: >
     (nvm_check_node_version.rc != 0) and
-    (nvm_check_node_version != 3)
+    (nvm_check_node_version.rc != 3)
 
 - name: Install node "{{ node_version }}"
   shell: >

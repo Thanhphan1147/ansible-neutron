@@ -1,22 +1,42 @@
 ---
 - name: Setting up permission
   ansible.builtin.file:
-    path: . {{ ansible_env.HOME }}/neutron_game/mvnw
+    path: "{{ ansible_env.HOME }}/neutron-game/mvnw"
     owner: root
     group: root
     mode: 0770
 
-- name: Build jar
-  shell: >
-    . {{ ansible_env.HOME }}/neutron_game/mvnw install -B -e
-  args:
-    executable: /bin/bash
-    chdir: "{{ ansible_env.HOME }}"
-
 - name: Verify
   shell: >
-    . {{ ansible_env.HOME }}/neutron_game/mvnw -ntp verify -Pprod -DskipTests
+    {{ ansible_env.HOME }}/neutron-game/mvnw clean verify -Pprod
   args:
     executable: /bin/bash
-    chdir: "{{ ansible_env.HOME }}"
+    chdir: "{{ ansible_env.HOME }}/neutron-game"
   
+- name: copy service file
+  ansible.builtin.copy:  
+    src: /home/ubuntu/ansible-neutron/config/neutronbe.service 
+    dest: /etc/systemd/system/
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Create a directory if it does not exist
+  ansible.builtin.file:
+    path: /etc/startup
+    state: directory
+    mode: '0755'
+
+- name: copy startup script
+  ansible.builtin.copy:
+    src: /home/ubuntu/ansible-neutron/config/startup.sh
+    dest: /etc/startup/startup.sh
+    owner: root
+    group: root
+    mode: u+rwx,g+rx,o+rx
+
+#- name: Start neutronbe service
+#  service:
+#    state: started
+#    daemon-reload: yes
+#    name: neutronbe 
