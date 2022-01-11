@@ -1,0 +1,84 @@
+---   
+- name: Fetch frontend git repository
+  ansible.builtin.git:
+    repo: 'https://tphan-personal@dev.azure.com/tphan-personal/neutron-game/_git/neutron-web'
+    dest: "{{ ansible_env.HOME }}/neutron-web"
+  environment:
+    GIT_TERMINAL_PROMPT: 0
+
+- name: Install node dependencies
+  shell: |
+    . {{ ansible_env.HOME }}/.nvm/nvm.sh
+    nvm use --silent {{ node_version }}
+    npm config set user 0
+    npm config set insafe-perm true
+    npm ci
+  args:
+    chdir: "{{ ansible_env.HOME }}/neutron-web"
+    executable: /bin/bash
+  register: node_npm_ci
+
+- name: Ensure serve is installed
+  shell: |
+    . {{ ansible_env.HOME }}/.nvm/nvm.sh
+    nvm use --silent {{ node_version }}
+    npm config set user 0
+    npm config set insafe-perm true
+    npm install -g serve
+  args:
+    chdir: "{{ ansible_env.HOME }}/neutron-web"
+    executable: /bin/bash
+  register: npm_i_serve
+
+- name: Build webapp
+  shell: |
+    . {{ ansible_env.HOME }}/.nvm/nvm.sh
+    nvm use --silent {{ node_version }}
+    npm config set user 0
+    npm config set insafe-perm true
+    npm run build
+  args:
+    chdir: "{{ ansible_env.HOME }}/neutron-web"
+    executable: /bin/bash
+  register: node_npm_run_build
+
+- name: Ensure directory exists
+  ansible.builtin.file:
+    path: /var/react
+    state: directory
+    mode: '0755'
+
+- name: Copy build files
+  ansible.builtin.copy:
+    remote_src: yes
+    src: "{{ ansible_env.HOME }}/neutron-web/build"
+    dest: /var/react
+
+- name: copy service file
+  ansible.builtin.copy:
+    src: /home/ubuntu/ansible-neutron/config/neutronweb.service
+    dest: /etc/systemd/system/
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Create a directory if it does not exist
+  ansible.builtin.file:
+    path: /etc/startup
+    state: directory
+    mode: '0755'
+
+- name: copy startup script
+  ansible.builtin.copy:
+    src: /home/ubuntu/ansible-neutron/config/startup-web.sh
+    dest: /etc/startup/startup-web.sh
+    owner: root
+    group: root
+    mode: u+rwx,g+rx,o+rx
+
+- name: Start neutronweb service
+  service:
+    state: restarted
+    daemon-reload: yes
+    name: neutronweb
+

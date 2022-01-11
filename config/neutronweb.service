@@ -4,7 +4,7 @@ Description=Neutron Backend
 [Service]
 Type=simple
 PIDFile=/run/neutronbe.pid
-ExecStart=/etc/startup/startup.sh
+ExecStart=/etc/startup/startup-web.sh
 User=root
 Group=root
 Restart=always

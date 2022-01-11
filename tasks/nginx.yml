@@ -8,7 +8,7 @@
   ansible.builtin.copy:
     src: /home/ubuntu/ansible-neutron/config/nginx.conf
     dest: /etc/nginx/nginx.conf
-    user: root
+    owner: root
     group: root
     mode: '0644'
 

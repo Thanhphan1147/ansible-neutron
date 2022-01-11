@@ -1,6 +1,6 @@
 ---
 - name: Install and configure neutron
-  hosts: servers
+  hosts: azure
   vars: 
     node_version: 12.16.1
     node_path: "/root/.nvm/versions/node/v{{node_version}}/bin"
@@ -9,7 +9,8 @@
   vars_files:
     - defaults/main.yml
   roles:
-    - { role: geerlingguy.mysql }
+    - role: geerlingguy.mysql
+    - role: geerlingguy.apache
 
   tasks:
     - name: Install java
@@ -17,38 +18,12 @@
 
     - name: Install node
       include: tasks/node.yml
-
-    - name: Fetch backend git repository
-      ansible.builtin.git:
-        repo: 'https://tphan-personal@dev.azure.com/tphan-personal/neutron-game/_git/neutron-game'
-        dest: "{{ ansible_env.HOME }}/neutron-game"
-      environment:
-        GIT_TERMINAL_PROMPT: 0
-        
-    - name: Install node dependencies
-      become: true
-      shell: |
-        . {{ ansible_env.HOME }}/.nvm/nvm.sh
-        nvm use --silent {{ node_version }}
-        nvm --version
-        node --version
-        whoami
-        which node
-        ls -lah "{{node_path}}/node" 
-        npm config set user 0
-        npm config set insafe-perm true
-        bash -c 'npm ci &>/root/npmlog'
-      args:
-        chdir: "{{ ansible_env.HOME }}/neutron-game"
-        executable: /bin/bash
-      register: node_ci_output
-    
-    - name: Debug node output
-      debug:
-        msg: "{{ node_ci_output.stdout }}"
    
-    - name: Maven
+    - name: Backend configuration
       include: tasks/backend.yml
     
+    - name: Frontend configuration
+      include: tasks/web.yml
+  
     - name: install nginx
       include: tasks/nginx.yml

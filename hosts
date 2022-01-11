@@ -1,2 +1,11 @@
 [servers]
-localhost	ansible_user=root	ansible_connection=local
+localhost					ansible_user=root	ansible_connection=local
+
+[azure]
+neutron.westeurope.cloudapp.azure.com
+# tphan-neutron.westeurope.cloudapp.azure.com	
+
+[azure:vars]
+ansible_user=azureuser
+ansible_connection=ssh
+ansible_ssh_private_key_file=/home/ubuntu/ansible-neutron/keys/azure-2.pem
